@@ -7,19 +7,14 @@ import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
 
 function App() {
-  const [notes, setNotes] = useState(() => {
-    const saved = localStorage.getItem("notes");
-    return saved ? JSON.parse(saved) : [];
-  });;
-
+  const [notes, setNotes] = useState([]);
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem("token"));
 
   const addNote = async (text) => {
     const token = localStorage.getItem("token");
-  
     const encrypted = encryptNote(text);
-  
-    const res = await fetch("http://localhost:5000/api/notes", {   // auth header
+
+    const res = await fetch("http://localhost:5000/api/notes", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -27,54 +22,59 @@ function App() {
       },
       body: JSON.stringify({ encrypted }),
     });
-  
+
     if (res.ok) {
       const newNote = await res.json();
-      setNotes((prev) => [...prev, newNote]);
+      setNotes(prev => [...prev, newNote]);
     }
   };
-  
 
   const deleteNote = async (noteId) => {
     const token = localStorage.getItem("token");
-  
-    await fetch(`http://localhost:5000/api/notes/${noteId}`, {   // auth header
+
+    await fetch(`http://localhost:5000/api/notes/${noteId}`, {
       method: "DELETE",
       headers: {
         Authorization: token,
       },
     });
-  
+
     setNotes(prev => prev.filter(note => note._id !== noteId));
   };
-  
 
   useEffect(() => {
-    const fetchNotes = async () => {  // fetching user-specific notes
+    const fetchNotes = async () => {
       const token = localStorage.getItem("token");
-      if (!token) {
-        console.warn("No token found. User may not be logged in.");  // checking user still logged in
-        return;
-      }
+      if (!token) return;
 
       const res = await fetch("http://localhost:5000/api/notes", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token,  // checking authorization w/ each API req
+          Authorization: token,
         },
       });
-  
+
       if (res.ok) {
         const data = await res.json();
         setNotes(data);
-      } else {
-        console.error("Failed to fetch notes");
+      } else if (res.status === 401) {
+        // Token expired or invalid
+        localStorage.removeItem("token");
+        setIsAuthenticated(false);
       }
     };
-  
-    fetchNotes();
-  }, []);  
+
+    if (isAuthenticated) {
+      fetchNotes();
+    }
+  }, [isAuthenticated]);  // re-fetch notes when a user logs in
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setNotes([]);  // clear notes when logging out
+    setIsAuthenticated(false);
+  };
 
   if (!isAuthenticated) {
     return (
@@ -85,20 +85,15 @@ function App() {
       </div>
     );
   }
-  
+
   return (
     <div>
       <h1>Secure Notes</h1>
       <NoteForm onAdd={addNote} />
       <NoteList notes={notes} onDelete={deleteNote} />
-      <button onClick={() => {
-        localStorage.removeItem("token");
-        setIsAuthenticated(false);
-      }}>
-        Log Out
-      </button>
+      <button onClick={handleLogout}>Log Out</button>
     </div>
-  );  
-}  
+  );
+}
 
 export default App;
