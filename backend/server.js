@@ -2,18 +2,21 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
+import helmet from "helmet";
+
+app.use(helmet());
 
 dotenv.config();
 
 const app = express();
 
-// Middleware
+// middleware
 app.use(cors({
   origin: "http://localhost:3000"
 }));
 app.use(express.json());
 
-// Routes
+// routes
 import authRoutes from "./routes/auth.js";
 import notesRoutes from "./routes/notes.js";
 

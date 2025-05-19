@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { decryptNote } from "../utils/crypto";
+import DOMPurify from "dompurify";
 
 export default function NoteItem({ note, onDelete }) {
   const [isDecrypted, setIsDecrypted] = useState(false);
@@ -10,7 +11,11 @@ export default function NoteItem({ note, onDelete }) {
 
   return (
     <li>
-      <code>{isDecrypted ? decryptNote(note.encrypted) : note.encrypted}</code>
+      <code>
+        {isDecrypted
+          ? DOMPurify.sanitize(decryptNote(note.encrypted))
+          : note.encrypted}
+      </code>
       <div style={{ marginTop: "0.5em" }}>
         <button onClick={handleToggle}>
           {isDecrypted ? "Hide" : "Decrypt"}
