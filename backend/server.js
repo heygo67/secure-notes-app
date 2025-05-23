@@ -3,23 +3,22 @@ import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
 import helmet from "helmet";
-
-app.use(helmet());
+import authRoutes from "./routes/auth.js";
+import notesRoutes from "./routes/notes.js";
 
 dotenv.config();
 
 const app = express();
+app.use(helmet());
 
-// middleware
+// Use dynamic CORS in production
 app.use(cors({
-  origin: "http://localhost:3000"
+  origin: process.env.CORS_ORIGIN || "http://localhost:3000"
 }));
+
 app.use(express.json());
 
-// routes
-import authRoutes from "./routes/auth.js";
-import notesRoutes from "./routes/notes.js";
-
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/notes", notesRoutes);
 
@@ -28,14 +27,14 @@ const MONGO_URI = process.env.MONGO_URI;
 const PORT = process.env.PORT || 5000;
 
 if (!MONGO_URI) {
-  console.error("Error: MONGO_URI not set in .env file");
+  console.error("Error: MONGO_URI not set in .env");
   process.exit(1);
 }
 
 mongoose.connect(MONGO_URI)
   .then(() => {
     app.listen(PORT, () => {
-      console.log(`Server is running on http://localhost:${PORT}`);
+      console.log(`Server running on port ${PORT}`);
     });
   })
   .catch((err) => {

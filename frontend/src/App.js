@@ -14,7 +14,7 @@ function App() {
     const token = localStorage.getItem("token");
     const encrypted = encryptNote(text);
 
-    const res = await fetch("http://localhost:5000/api/notes", {
+    const res = await fetch(`${process.env.REACT_APP_API_URL}/api/notes`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -32,7 +32,7 @@ function App() {
   const deleteNote = async (noteId) => {
     const token = localStorage.getItem("token");
 
-    await fetch(`http://localhost:5000/api/notes/${noteId}`, {
+    await fetch(`${process.env.REACT_APP_API_URL}/api/notes/${noteId}`, {
       method: "DELETE",
       headers: {
         Authorization: token,
@@ -47,7 +47,7 @@ function App() {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      const res = await fetch("http://localhost:5000/api/notes", {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/notes`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
