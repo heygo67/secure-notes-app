@@ -1,8 +1,15 @@
-import mongoose from "mongoose";
+const users = [];
 
-const UserSchema = new mongoose.Schema({
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true }
-});
+export function findUserByEmail(email) {
+  return users.find(user => user.email === email);
+}
 
-export default mongoose.model("User", UserSchema);
+export function createUser({ email, hashedPassword }) {
+  const user = {
+    _id: Date.now().toString(), // mock ObjectId
+    email,
+    password: hashedPassword
+  };
+  users.push(user);
+  return user;
+}

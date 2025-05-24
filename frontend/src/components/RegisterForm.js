@@ -7,7 +7,12 @@ export default function RegisterForm({ onRegisterSuccess }) {
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    const res = await fetch("http://localhost:5000/api/auth/register", {
+    if (!email.trim() || !password.trim()) {
+      alert("Email and password cannot be empty.");
+      return;
+    }
+
+    const res = await fetch(`${process.env.REACT_APP_API_URL}/api/auth/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -20,7 +25,8 @@ export default function RegisterForm({ onRegisterSuccess }) {
       localStorage.setItem("token", token);
       onRegisterSuccess();  // let App.js know we're logged in
     } else {
-      alert("Registration failed.");
+      const error = await res.json();
+      alert(error.message || "Registration failed.");
     }
   };
 

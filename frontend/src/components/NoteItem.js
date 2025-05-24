@@ -10,8 +10,15 @@ export default function NoteItem({ note, onDelete }) {
   };
 
   return (
-    <li>
-      <code>
+    <li style={{ marginBottom: "1.5em", listStyle: "none" }}>
+      <code style={{
+        display: "block",
+        background: "#f4f4f4",
+        padding: "1em",
+        borderRadius: "6px",
+        whiteSpace: "pre-wrap",
+        wordBreak: "break-word",
+      }}>
         {isDecrypted
           ? DOMPurify.sanitize(decryptNote(note.encrypted))
           : note.encrypted}

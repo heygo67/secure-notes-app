@@ -1,14 +1,12 @@
-// middleware/auth.js
-
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET;
-
-if (!JWT_SECRET) {
-  throw new Error("JWT_SECRET must be set in .env");
-}
-
 export default function (req, res, next) {
+  const JWT_SECRET = process.env.JWT_SECRET;
+
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET must be set in .env");
+  }
+
   const token = req.header("Authorization");
   if (!token) return res.status(401).json({ message: "Access denied" });
 

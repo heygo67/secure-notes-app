@@ -7,10 +7,16 @@ import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
 
 function App() {
+  // Stores all notes for the current user session
   const [notes, setNotes] = useState([]);
+
+  // Tracks whether a user is logged in (based on presence of JWT in localStorage)
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem("token"));
 
+  // Adds an encrypted note to the temporary backend
   const addNote = async (text) => {
+    if (!text.trim()) return; // Ignore empty input
+
     const token = localStorage.getItem("token");
     const encrypted = encryptNote(text);
 
@@ -25,10 +31,11 @@ function App() {
 
     if (res.ok) {
       const newNote = await res.json();
-      setNotes(prev => [...prev, newNote]);
+      setNotes(prev => [...prev, newNote]); // Add to local state
     }
   };
 
+  // Deletes a note by ID for the authenticated user
   const deleteNote = async (noteId) => {
     const token = localStorage.getItem("token");
 
@@ -39,9 +46,10 @@ function App() {
       },
     });
 
-    setNotes(prev => prev.filter(note => note._id !== noteId));
+    setNotes(prev => prev.filter(note => note._id !== noteId)); // Remove from local state
   };
 
+  // Fetches notes when the user logs in (from in-memory store on the backend)
   useEffect(() => {
     const fetchNotes = async () => {
       const token = localStorage.getItem("token");
@@ -57,9 +65,9 @@ function App() {
 
       if (res.ok) {
         const data = await res.json();
-        setNotes(data);
+        setNotes(data); // Load into local state
       } else if (res.status === 401) {
-        // Token expired or invalid
+        // Token expired or invalid; log user out
         localStorage.removeItem("token");
         setIsAuthenticated(false);
       }
@@ -68,24 +76,28 @@ function App() {
     if (isAuthenticated) {
       fetchNotes();
     }
-  }, [isAuthenticated]);  // re-fetch notes when a user logs in
+  }, [isAuthenticated]);
 
+  // Logs out the user by clearing token and state
   const handleLogout = () => {
     localStorage.removeItem("token");
-    setNotes([]);  // clear notes when logging out
+    setNotes([]); // Clear local notes
     setIsAuthenticated(false);
   };
 
+  // Render login/register view if user is not authenticated
   if (!isAuthenticated) {
     return (
       <div>
         <h1>Secure Notes</h1>
+        <p>Please log in or register to access your notes.</p>
         <LoginForm onLoginSuccess={() => setIsAuthenticated(true)} />
         <RegisterForm onRegisterSuccess={() => setIsAuthenticated(true)} />
       </div>
     );
   }
 
+  // Render secure notes interface
   return (
     <div>
       <h1>Secure Notes</h1>

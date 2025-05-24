@@ -7,7 +7,12 @@ export default function LoginForm({ onLoginSuccess }) {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    const res = await fetch("http://localhost:5000/api/auth/login", {
+    if (!email.trim() || !password.trim()) {
+      alert("Email and password are required.");
+      return;
+    }
+
+    const res = await fetch(`${process.env.REACT_APP_API_URL}/api/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -18,9 +23,10 @@ export default function LoginForm({ onLoginSuccess }) {
     if (res.ok) {
       const { token } = await res.json();
       localStorage.setItem("token", token);
-      onLoginSuccess();  // let App.js know we're logged in
+      onLoginSuccess();  // Let App.js know we're logged in
     } else {
-      alert("Login failed.");
+      const error = await res.json();
+      alert(error.message || "Login failed.");
     }
   };
 

@@ -1,11 +1,25 @@
-import mongoose from "mongoose";
+const notes = [];
 
-const NoteSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  encrypted: String,
-  timestamp: Date
-});
+export function createNote({ userId, encrypted }) {
+  const note = {
+    _id: Date.now().toString(), // mock ObjectId
+    userId,
+    encrypted,
+    timestamp: new Date()
+  };
+  notes.push(note);
+  return note;
+}
 
-export default mongoose.model("Note", NoteSchema);
+export function getNotesByUser(userId) {
+  return notes.filter(note => note.userId === userId);
+}
 
-// each note linked to the authenticated user
+export function deleteNoteById(userId, noteId) {
+  const index = notes.findIndex(note => note._id === noteId && note.userId === userId);
+  if (index !== -1) {
+    notes.splice(index, 1);
+    return true;
+  }
+  return false;
+}
