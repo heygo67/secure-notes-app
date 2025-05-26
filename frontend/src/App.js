@@ -7,49 +7,55 @@ import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
 
 function App() {
-  // Stores all notes for the current user session
   const [notes, setNotes] = useState([]);
-
-  // Tracks whether a user is logged in (based on presence of JWT in localStorage)
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem("token"));
+  const [theme, setTheme] = useState("light");
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Adds an encrypted note to the temporary backend
-  const addNote = async (text) => {
-    if (!text.trim()) return; // Ignore empty input
+  // Apply theme class to <body> when theme changes
+  useEffect(() => {
+    document.body.className = theme;
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => (prev === "light" ? "dark" : "light"));
+  };
+
+  const addNote = async ({ title, text }) => {
+    if (!title.trim() || !text.trim()) return;
 
     const token = localStorage.getItem("token");
+    const encryptedTitle = encryptNote(title);
     const encrypted = encryptNote(text);
 
     const res = await fetch(`${process.env.REACT_APP_API_URL}/api/notes`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: token,
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ encrypted }),
+      body: JSON.stringify({ title: encryptedTitle, encrypted }),
     });
 
     if (res.ok) {
       const newNote = await res.json();
-      setNotes(prev => [...prev, newNote]); // Add to local state
+      setNotes(prev => [...prev, newNote]);
     }
   };
 
-  // Deletes a note by ID for the authenticated user
   const deleteNote = async (noteId) => {
     const token = localStorage.getItem("token");
 
     await fetch(`${process.env.REACT_APP_API_URL}/api/notes/${noteId}`, {
       method: "DELETE",
       headers: {
-        Authorization: token,
+        Authorization: `Bearer ${token}`,
       },
     });
 
-    setNotes(prev => prev.filter(note => note._id !== noteId)); // Remove from local state
+    setNotes(prev => prev.filter(note => note._id !== noteId));
   };
 
-  // Fetches notes when the user logs in (from in-memory store on the backend)
   useEffect(() => {
     const fetchNotes = async () => {
       const token = localStorage.getItem("token");
@@ -59,18 +65,22 @@ function App() {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token,
+          Authorization: `Bearer ${token}`,
         },
       });
 
       if (res.ok) {
         const data = await res.json();
-        setNotes(data); // Load into local state
-      } else if (res.status === 401) {
-        // Token expired or invalid; log user out
-        localStorage.removeItem("token");
-        setIsAuthenticated(false);
+        console.log("Fetched notes:", data);
+
+        if (Array.isArray(data)) {
+          setNotes(data);
+        } else {
+          console.error("Expected notes array but got:", data);
+          setNotes([]);
+        }
       }
+
     };
 
     if (isAuthenticated) {
@@ -78,32 +88,44 @@ function App() {
     }
   }, [isAuthenticated]);
 
-  // Logs out the user by clearing token and state
   const handleLogout = () => {
     localStorage.removeItem("token");
-    setNotes([]); // Clear local notes
+    setNotes([]);
     setIsAuthenticated(false);
   };
 
-  // Render login/register view if user is not authenticated
-  if (!isAuthenticated) {
-    return (
-      <div>
-        <h1>Secure Notes</h1>
-        <p>Please log in or register to access your notes.</p>
-        <LoginForm onLoginSuccess={() => setIsAuthenticated(true)} />
-        <RegisterForm onRegisterSuccess={() => setIsAuthenticated(true)} />
-      </div>
-    );
-  }
-
-  // Render secure notes interface
   return (
-    <div>
+    <div className="app-container">
       <h1>Secure Notes</h1>
-      <NoteForm onAdd={addNote} />
-      <NoteList notes={notes} onDelete={deleteNote} />
-      <button onClick={handleLogout}>Log Out</button>
+
+      <button onClick={toggleTheme} className="theme-toggle">
+        Switch to {theme === "light" ? "Dark" : "Light"} Mode
+      </button>
+
+      {!isAuthenticated ? (
+        <>
+          <p>Please log in or register to access your notes.</p>
+          <LoginForm onLoginSuccess={() => setIsAuthenticated(true)} />
+          <RegisterForm onRegisterSuccess={() => setIsAuthenticated(true)} />
+        </>
+      ) : (
+        <>
+          <NoteForm onAdd={addNote} />
+          <div className="search-bar-container">
+            <input
+              type="text"
+              placeholder="Search titles..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-bar"
+            />
+          </div>
+          <NoteList notes={notes} onDelete={deleteNote} searchTerm={searchTerm} />
+          <button onClick={handleLogout} className="logout-button">
+            Log Out
+          </button>
+        </>
+      )}
     </div>
   );
 }

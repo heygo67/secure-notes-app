@@ -10,22 +10,33 @@ router.get("/", auth, (req, res) => {
     const notes = getNotesByUser(req.user._id);
     res.json(notes);
   } catch (error) {
+    console.error("Error fetching notes:", error);
     res.status(500).json({ message: "Failed to fetch notes", error: error.message });
   }
 });
 
 // POST /api/notes - create a new note for the authenticated user
 router.post("/", auth, (req, res) => {
+  const { title, encrypted } = req.body;
+  if (!title || !encrypted) {
+    return res.status(400).json({ message: "Missing title or encrypted body" });
+  }
+
+  console.log("Authenticated user:", req.user);
+
   try {
     const note = createNote({
       userId: req.user._id,
-      encrypted: req.body.encrypted
+      title,
+      encrypted,
     });
     res.status(201).json(note);
   } catch (error) {
     res.status(500).json({ message: "Failed to create note", error: error.message });
   }
 });
+
+
 
 // DELETE /api/notes/:id - delete a specific note
 router.delete("/:id", auth, (req, res) => {
@@ -36,6 +47,7 @@ router.delete("/:id", auth, (req, res) => {
     }
     res.json({ message: "Note deleted successfully" });
   } catch (error) {
+    console.error("Error deleting note:", error);
     res.status(500).json({ message: "Failed to delete note", error: error.message });
   }
 });

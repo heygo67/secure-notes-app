@@ -9,25 +9,23 @@ export default function NoteItem({ note, onDelete }) {
     setIsDecrypted(prev => !prev);
   };
 
+  const safeTitle = isDecrypted && note.title
+    ? DOMPurify.sanitize(decryptNote(note.title))
+    : "Encrypted Title";
+
+  const safeBody = isDecrypted
+    ? DOMPurify.sanitize(decryptNote(note.encrypted))
+    : note.encrypted;
+
   return (
-    <li style={{ marginBottom: "1.5em", listStyle: "none" }}>
-      <code style={{
-        display: "block",
-        background: "#f4f4f4",
-        padding: "1em",
-        borderRadius: "6px",
-        whiteSpace: "pre-wrap",
-        wordBreak: "break-word",
-      }}>
-        {isDecrypted
-          ? DOMPurify.sanitize(decryptNote(note.encrypted))
-          : note.encrypted}
-      </code>
-      <div style={{ marginTop: "0.5em" }}>
+    <li className="note-card">
+      <h3 className="note-title">{safeTitle}</h3>
+      <pre className="note-text">{safeBody}</pre>
+      <div className="note-actions">
         <button onClick={handleToggle}>
           {isDecrypted ? "Hide" : "Decrypt"}
         </button>
-        <button onClick={() => onDelete(note._id)} style={{ marginLeft: "1em" }}>
+        <button onClick={() => onDelete(note._id)} className="delete-btn">
           Delete
         </button>
       </div>
