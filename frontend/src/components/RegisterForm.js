@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function RegisterForm({ onRegisterSuccess }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -20,13 +22,16 @@ export default function RegisterForm({ onRegisterSuccess }) {
       body: JSON.stringify({ email, password })
     });
 
+    const data = await res.json();
+
     if (res.ok) {
-      const { token } = await res.json();
+      const { token, refreshToken } = data;
       localStorage.setItem("token", token);
-      onRegisterSuccess();  // let App.js know we're logged in
+      localStorage.setItem("refreshToken", refreshToken);
+      onRegisterSuccess();  // Let App.js know we're logged in
+      navigate("/notes"); // Navigate to notes page after success
     } else {
-      const error = await res.json();
-      alert(error.message || "Registration failed.");
+      alert(data.message || "Registration failed.");
     }
   };
 
@@ -50,6 +55,7 @@ export default function RegisterForm({ onRegisterSuccess }) {
       />
       <br />
       <button type="submit">Register</button>
+      <p>Already have an account? <button type="button" onClick={() => navigate("/login")} className="link-button">Log in</button></p>
     </form>
   );
 }

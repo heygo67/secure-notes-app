@@ -6,19 +6,18 @@ import NoteList from "./components/NoteList";
 import { encryptNote } from "./utils/crypto";
 import LoginForm from "./components/LoginForm";
 import RegisterForm from "./components/RegisterForm";
+import { fetchWithAuth } from "./utils/fetchWithAuth";
 
 function NotesPage({ notes, setNotes, onLogout, searchTerm, setSearchTerm }) {
   const addNote = async ({ title, text }) => {
     if (!title.trim() || !text.trim()) return;
-    const token = localStorage.getItem("token");
     const encryptedTitle = encryptNote(title);
     const encrypted = encryptNote(text);
 
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/api/notes`, {
+    const res = await fetchWithAuth(`${process.env.REACT_APP_API_URL}/api/notes`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({ title: encryptedTitle, encrypted }),
     });
@@ -30,13 +29,10 @@ function NotesPage({ notes, setNotes, onLogout, searchTerm, setSearchTerm }) {
   };
 
   const deleteNote = async (noteId) => {
-    const token = localStorage.getItem("token");
-    await fetch(`${process.env.REACT_APP_API_URL}/api/notes/${noteId}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    await fetchWithAuth(`${process.env.REACT_APP_API_URL}/api/notes/${noteId}`, {
+      method: "DELETE"
     });
+
     setNotes(prev => prev.filter(note => note._id !== noteId));
   };
 
@@ -72,22 +68,27 @@ function App() {
 
   useEffect(() => {
     const fetchNotes = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
+      try {
+        const res = await fetchWithAuth(`${process.env.REACT_APP_API_URL}/api/notes`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
 
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/notes`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setNotes(Array.isArray(data) ? data : []);
-      } else if (res.status === 401) {
+        if (res.ok) {
+          const data = await res.json();
+          setNotes(Array.isArray(data) ? data : []);
+        } else if (res.status === 401) {
+          // token refresh must have failed
+          localStorage.removeItem("token");
+          localStorage.removeItem("refreshToken");
+          setIsAuthenticated(false);
+        }
+      } catch (err) {
+        console.error("Error fetching notes:", err);
         localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
         setIsAuthenticated(false);
       }
     };
@@ -97,8 +98,10 @@ function App() {
     }
   }, [isAuthenticated]);
 
+
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
     setNotes([]);
     setIsAuthenticated(false);
   };
