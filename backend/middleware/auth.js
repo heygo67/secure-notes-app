@@ -8,8 +8,6 @@ export default function (req, res, next) {
 
   const authHeader = req.header("Authorization");
 
-  console.log("Auth Header:", authHeader);
-
   if (!authHeader) {
     return res.status(401).json({ message: "Access denied. No token provided." });
   }
@@ -23,9 +21,7 @@ export default function (req, res, next) {
     req.user = verified;
     next();
   } catch (err) {
-    console.error("Invalid token:", err.message);
     res.status(400).json({ message: "Invalid token" });
   }
 
-  console.log("Parsed Token:", token);
 }

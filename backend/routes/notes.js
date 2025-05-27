@@ -10,7 +10,6 @@ router.get("/", auth, (req, res) => {
     const notes = getNotesByUser(req.user._id);
     res.json(notes);
   } catch (error) {
-    console.error("Error fetching notes:", error);
     res.status(500).json({ message: "Failed to fetch notes", error: error.message });
   }
 });
@@ -21,8 +20,6 @@ router.post("/", auth, (req, res) => {
   if (!title || !encrypted) {
     return res.status(400).json({ message: "Missing title or encrypted body" });
   }
-
-  console.log("Authenticated user:", req.user);
 
   try {
     const note = createNote({
@@ -47,7 +44,6 @@ router.delete("/:id", auth, (req, res) => {
     }
     res.json({ message: "Note deleted successfully" });
   } catch (error) {
-    console.error("Error deleting note:", error);
     res.status(500).json({ message: "Failed to delete note", error: error.message });
   }
 });
