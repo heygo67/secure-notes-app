@@ -47,6 +47,36 @@ This project focuses on demonstrating core secure development practices includin
 
 ---
 
+## Project Structure and Separation of Concerns
+
+- UI components are isolated in `/components` with no business logic
+- API calls are abstracted in reusable utility modules
+- Authentication handled with middleware and dedicated `/auth` routes
+- Encryption, token logic, and sanitization are encapsulated in `utils/`
+- Clear distinction between frontend UI, backend API, and auth layers
+
+---
+
+## Purpose
+
+This application was created to demonstrate the fundamentals of secure full-stack development, including:
+- Client-side encryption
+- Stateless authentication
+- Secure API design
+- Safe rendering practices in the browser
+
+---
+
+## Security Practices
+
+- Passwords hashed using bcrypt before storage
+- JWT-based stateless authentication with refresh token rotation
+- Notes encrypted client-side with AES before transmission
+- All decrypted content sanitized with DOMPurify before rendering
+- Backend protected by JWT middleware and security headers via Helmet
+
+---
+
 ## Getting Started
 
 ### Backend Setup
@@ -107,13 +137,3 @@ This version uses in-memory storage. All user data and notes will be lost upon s
 - Editable notes
 - User profiles
 - Rate limiting and account lockout mechanisms
-
----
-
-## Purpose
-
-This application was created to demonstrate the fundamentals of secure full-stack development, including:
-- Client-side encryption
-- Stateless authentication
-- Secure API design
-- Safe rendering practices in the browser
