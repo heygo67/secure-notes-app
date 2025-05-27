@@ -20,6 +20,7 @@ This project focuses on demonstrating core secure development practices includin
 - User registration and login
   - Passwords are hashed using bcrypt
   - Stateless authentication with JWT
+    - Refresh tokens securely stored and rotated on expiration
 
 - Note encryption
   - Notes (title and body) are encrypted with AES in the browser
@@ -105,7 +106,6 @@ This version uses in-memory storage. All user data and notes will be lost upon s
 - Persistent storage with MongoDB
 - Editable notes
 - User profiles
-- Refresh token support
 - Rate limiting and account lockout mechanisms
 
 ---
